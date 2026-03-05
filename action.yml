@@ -76,11 +76,45 @@ runs:
             exit 1
           fi
         fi
+    - name: Resolve CLI version and checksum
+      id: resolve-cli
+      shell: bash
+      env:
+        INPUT_FGA_CLI_VERSION: ${{ inputs.fga_cli_version }}
+      run: |
+        if [ "$INPUT_FGA_CLI_VERSION" == "latest" ]; then
+          VERSION=$(curl -s https://api.github.com/repos/openfga/cli/releases/latest | jq -r '.tag_name')
+        else
+          VERSION="$INPUT_FGA_CLI_VERSION"
+        fi
+        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+        curl -sL "https://github.com/openfga/cli/releases/download/${VERSION}/checksums.txt" -o checksums.txt
+
+        OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+        ARCH=$(uname -m)
+        case "$ARCH" in
+          x86_64) ARCH="amd64" ;;
+          aarch64|arm64) ARCH="arm64" ;;
+          i386|i686) ARCH="386" ;;
+        esac
+
+        VERSION_NUM="${VERSION#v}"
+        ARCHIVE="fga_${VERSION_NUM}_${OS}_${ARCH}.tar.gz"
+        CHECKSUM=$(grep "  ${ARCHIVE}$" checksums.txt | awk '{print $1}')
+
+        if [ -z "$CHECKSUM" ]; then
+          echo "::error::Could not find checksum for ${ARCHIVE}"
+          exit 1
+        fi
+
+        echo "digest=${CHECKSUM}" >> "$GITHUB_OUTPUT"
     - name: Install OpenFGA CLI
       uses: step-security/action-install-gh-release@v2
       with:
         repo: openfga/cli
-        tag: ${{ inputs.fga_cli_version }}
+        tag: ${{ steps.resolve-cli.outputs.version }}
+        digest: ${{ steps.resolve-cli.outputs.digest }}
         cache: enable
     - uses: step-security/setup-yq@v1
       with:
@@ -94,6 +128,10 @@ runs:
         INPUT_FGA_SERVER_STORE_ID: ${{ inputs.fga_server_store_id }}
         INPUT_FGA_API_TOKEN: ${{ inputs.fga_api_token }}
       run: |
+        if [ -n "$INPUT_FGA_API_TOKEN" ]; then
+          echo "::add-mask::$INPUT_FGA_API_TOKEN"
+        fi
+
         while IFS= read -r -d '' test_file
         do
           ((test_files_count+=1))
