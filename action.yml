@@ -71,8 +71,8 @@ runs:
           if [ $CURL_EXIT_CODE -ne 0 ]; then
             echo "Timeout or API not reachable. Continuing to next step."
           elif [ "$RESPONSE" = "403" ]; then
-            echo "::error::This action requires a StepSecurity subscription for private repositories."
-            echo "::error::Learn how to enable a subscription: $DOCS_URL"
+            echo -e "::error::\033[1;31mThis action requires a StepSecurity subscription for private repositories.\033[0m"
+            echo -e "::error::\033[31mLearn how to enable a subscription: $DOCS_URL\033[0m"
             exit 1
           fi
         fi
