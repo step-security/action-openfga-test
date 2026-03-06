@@ -110,13 +110,13 @@ runs:
 
         echo "digest=${CHECKSUM}" >> "$GITHUB_OUTPUT"
     - name: Install OpenFGA CLI
-      uses: step-security/action-install-gh-release@v2
+      uses: step-security/action-install-gh-release@671c3094a3d5dcd2870460d0507b99841597d12b # v2.1.0
       with:
         repo: openfga/cli
         tag: ${{ steps.resolve-cli.outputs.version }}
         digest: ${{ steps.resolve-cli.outputs.digest }}
         cache: enable
-    - uses: step-security/setup-yq@v1
+    - uses: step-security/setup-yq@6509aa1108c1ce6e4239aedc9b762ad7b3f1e411 # v1.0.2
       with:
         yq-version: v4.25.3
     - name: Run OpenFGA CLI
