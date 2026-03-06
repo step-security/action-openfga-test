@@ -15,7 +15,12 @@ jobs:
     name: Run test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: default values
         uses: ./
       - name: specify folder
@@ -53,9 +58,14 @@ jobs:
       OPENFGA_DATASTORE_URI: 'postgres://step-security:1234@127.0.0.1:5432/step-security'
       OPENFGA_LOG_LEVEL: debug
     steps:
-      - uses: actions/checkout@v6
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Install OpenFGA server ${{ matrix.test.openfga_tag }}
-        uses: step-security/action-install-gh-release@v2
+        uses: step-security/action-install-gh-release@671c3094a3d5dcd2870460d0507b99841597d12b # v2.1.0
         with:
           repo: openfga/openfga
           tag: ${{ matrix.test.openfga_tag }}
@@ -67,12 +77,12 @@ jobs:
         shell: bash
         run: openfga run &
       - name: Install OpenFGA cli
-        uses: step-security/action-install-gh-release@v2
+        uses: step-security/action-install-gh-release@671c3094a3d5dcd2870460d0507b99841597d12b # v2.1.0
         with:
           repo: openfga/cli
           cache: enable
       - name: Install jq
-        uses: step-security/install-jq-action@v3
+        uses: step-security/install-jq-action@fd50feb4e8cd2b0e1e72df42db468e62c71d58f4 # v3.2.0
       - name: Create store with model
         id: 'store'
         run: |
