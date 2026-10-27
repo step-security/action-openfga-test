@@ -114,7 +114,7 @@ runs:
 
         echo "digest=${CHECKSUM}" >> "$GITHUB_OUTPUT"
     - name: Install OpenFGA CLI
-      uses: step-security/action-install-gh-release@671c3094a3d5dcd2870460d0507b99841597d12b # v2.1.0
+      uses: step-security/action-install-gh-release@fcc32674e8d9158ed77bb8ec6d54b7d49ed259b9 # v3.0.0
       with:
         repo: openfga/cli
         tag: ${{ steps.resolve-cli.outputs.version }}

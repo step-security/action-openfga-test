@@ -121,7 +121,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Install OpenFGA server v1.5.3
-        uses: step-security/action-install-gh-release@v2
+        uses: step-security/action-install-gh-release@v3
         with:
           repo: openfga/openfga
           tag: v1.5.3
@@ -133,7 +133,7 @@ jobs:
         shell: bash
         run: openfga run &
       - name: Install OpenFGA cli
-        uses: step-security/action-install-gh-release@v2
+        uses: step-security/action-install-gh-release@v3
         with:
           repo: openfga/cli
           cache: enable

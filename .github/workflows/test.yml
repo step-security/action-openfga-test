@@ -86,7 +86,7 @@ jobs:
 
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Install OpenFGA server
-        uses: step-security/action-install-gh-release@671c3094a3d5dcd2870460d0507b99841597d12b # v2.1.0
+        uses: step-security/action-install-gh-release@fcc32674e8d9158ed77bb8ec6d54b7d49ed259b9 # v3.0.0
         with:
           repo: openfga/openfga
           tag: v1.5.3
@@ -98,7 +98,7 @@ jobs:
         shell: bash
         run: openfga run &
       - name: Install OpenFGA cli
-        uses: step-security/action-install-gh-release@671c3094a3d5dcd2870460d0507b99841597d12b # v2.1.0
+        uses: step-security/action-install-gh-release@fcc32674e8d9158ed77bb8ec6d54b7d49ed259b9 # v3.0.0
         with:
           repo: openfga/cli
           cache: enable
@@ -168,7 +168,7 @@ jobs:
 
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Install OpenFGA server ${{ matrix.test.openfga_tag }}
-        uses: step-security/action-install-gh-release@671c3094a3d5dcd2870460d0507b99841597d12b # v2.1.0
+        uses: step-security/action-install-gh-release@fcc32674e8d9158ed77bb8ec6d54b7d49ed259b9 # v3.0.0
         with:
           repo: openfga/openfga
           tag: ${{ matrix.test.openfga_tag }}
@@ -180,7 +180,7 @@ jobs:
         shell: bash
         run: openfga run &
       - name: Install OpenFGA cli
-        uses: step-security/action-install-gh-release@671c3094a3d5dcd2870460d0507b99841597d12b # v2.1.0
+        uses: step-security/action-install-gh-release@fcc32674e8d9158ed77bb8ec6d54b7d49ed259b9 # v3.0.0
         with:
           repo: openfga/cli
           cache: enable
