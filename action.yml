@@ -29,6 +29,10 @@ inputs:
     description: 'Version tag of openfga/cli to use'
     required: false
     default: latest
+  fga_cli_allow_external_files:
+    description: 'Enable OpenFGA cli --allow-external-files flag.'
+    required: false
+    default: false
 
 runs:
   using: composite
@@ -127,6 +131,7 @@ runs:
         INPUT_FGA_SERVER_URL: ${{ inputs.fga_server_url }}
         INPUT_FGA_SERVER_STORE_ID: ${{ inputs.fga_server_store_id }}
         INPUT_FGA_API_TOKEN: ${{ inputs.fga_api_token }}
+        FGA_CLI_ALLOW_EXTERNAL_FILES: ${{ inputs.fga_cli_allow_external_files }}
       run: |
         if [ -n "$INPUT_FGA_API_TOKEN" ]; then
           echo "::add-mask::$INPUT_FGA_API_TOKEN"
@@ -136,18 +141,29 @@ runs:
         do
           ((test_files_count+=1))
 
+          allow_external_files=""
+          if [[ "$FGA_CLI_ALLOW_EXTERNAL_FILES" == "true" ]]; then
+            allow_external_files="--allow-external-files"
+          fi
+
           if [[ -z "$INPUT_FGA_SERVER_URL" ]]; then
             echo "Running FGA test file ${test_file}"
-            fga model test --tests "${test_file}"
+            fga model test ${allow_external_files} --tests "${test_file}"
           else
             echo "Running FGA test file ${test_file} against OpenFGA server $INPUT_FGA_SERVER_URL"
-            test_file_without_model=$(mktemp)
-            yq 'del(.model_file, .model)' "${test_file}" > "${test_file_without_model}"
+            test_file_dir=$(dirname -- "${test_file}")
+            test_file_base=$(basename -- "${test_file}")
+            test_file_without_model=$(mktemp -- "${test_file_dir}/${test_file_base}.XXXXXX")
+            trap 'rm -f "${test_file_without_model}"' EXIT
+            yq 'del(.model_file, .model)' -- "${test_file}" > "${test_file_without_model}"
             fga model test \
+              ${allow_external_files} \
               --api-url "$INPUT_FGA_SERVER_URL" \
               --store-id "$INPUT_FGA_SERVER_STORE_ID" \
               ${INPUT_FGA_API_TOKEN:+--api-token "$INPUT_FGA_API_TOKEN"} \
               --tests "${test_file_without_model}"
+            rm -f "${test_file_without_model}"
+            trap - EXIT
           fi
 
         done <   <(find "$INPUT_TEST_PATH" -name "$INPUT_TEST_FILES_PATTERN" -print0)
