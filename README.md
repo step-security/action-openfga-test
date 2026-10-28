@@ -14,6 +14,8 @@ This action can be used to test your authorization model using store test files.
 | `fga_server_store_id` | The OpenFGA server store id. Must be provided if fga_server_url is configured.                                                                                                                                                                                                                                               | No       | _empty_      |
 | `fga_api_token`       | The api token to use for testing against an OpenFGA server. Ignored if `fga_server_url` is not provided.                                                                                                                                                                                                                     | No       | _empty_      |
 | `fga_cli_version`     | The [OpenFGA CLI](https://github.com/openfga/cli/) version to use as the base for tests.                                                                                                                                                                                                                                     | No       | `latest`     |
+| `fga_cli_allow_external_files` | Enable the OpenFGA CLI `--allow-external-files` flag, which allows `model_file`, `tuple_file` and `tuple_files` references in the test file to resolve to paths outside the test file's directory. Only enable this for test files you trust. | No | `false` |
+| `fga_cli_allow_external_files` | Enable the OpenFGA CLI `--allow-external-files` flag, which allows `model_file`, `tuple_file` and `tuple_files` references in the test file to resolve to paths outside the test file's directory. Only enable this for test files you trust.                                                                              | No       | `false`      |
 
 > Note: the action will fail if no test is found in the specified test path with the given pattern
 
@@ -119,7 +121,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Install OpenFGA server v1.5.3
-        uses: step-security/action-install-gh-release@v2
+        uses: step-security/action-install-gh-release@v3
         with:
           repo: openfga/openfga
           tag: v1.5.3
@@ -131,7 +133,7 @@ jobs:
         shell: bash
         run: openfga run &
       - name: Install OpenFGA cli
-        uses: step-security/action-install-gh-release@v2
+        uses: step-security/action-install-gh-release@v3
         with:
           repo: openfga/cli
           cache: enable

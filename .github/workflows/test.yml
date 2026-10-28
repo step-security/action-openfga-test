@@ -32,6 +32,109 @@ jobs:
         with:
           test_path: ./example/model.fga.yaml
 
+  test_allow_external_files:
+    name: Test allow-external-files flag
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: external reference should fail by default
+        id: without_flag
+        uses: ./
+        continue-on-error: true
+        with:
+          test_path: ./example/allow_external_files/tests
+          test_files_pattern: '*.test.yaml'
+      - name: assert failure without flag
+        run: |
+          if [ "${{ steps.without_flag.outcome }}" == "success" ]; then
+            echo "Expected the action to fail without fga_cli_allow_external_files"
+            exit 1
+          fi
+      - name: external reference should pass with flag
+        uses: ./
+        with:
+          test_path: ./example/allow_external_files/tests
+          test_files_pattern: '*.test.yaml'
+          fga_cli_allow_external_files: 'true'
+
+  test_allow_external_files_remote:
+    name: Test allow-external-files flag against remote server
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_USER: step-security
+          POSTGRES_PASSWORD: "1234"
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    env:
+      OPENFGA_DATASTORE_ENGINE: 'postgres'
+      OPENFGA_DATASTORE_URI: 'postgres://step-security:1234@127.0.0.1:5432/step-security'
+      OPENFGA_LOG_LEVEL: debug
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Install OpenFGA server
+        uses: step-security/action-install-gh-release@fcc32674e8d9158ed77bb8ec6d54b7d49ed259b9 # v3.0.0
+        with:
+          repo: openfga/openfga
+          tag: v1.5.3
+          cache: enable
+      - name: Migrate OpenFGA Database
+        shell: bash
+        run: openfga migrate
+      - name: Start OpenFGA Server
+        shell: bash
+        run: openfga run &
+      - name: Install OpenFGA cli
+        uses: step-security/action-install-gh-release@fcc32674e8d9158ed77bb8ec6d54b7d49ed259b9 # v3.0.0
+        with:
+          repo: openfga/cli
+          cache: enable
+      - name: Install jq
+        uses: step-security/install-jq-action@fd50feb4e8cd2b0e1e72df42db468e62c71d58f4 # v3.2.0
+      - name: Create store with model
+        id: store
+        run: |
+          fga store create --model ./example/allow_external_files/model.fga > store_response.json
+          cat store_response.json
+          store_id=$(jq -r '.store.id' store_response.json)
+          echo "store_id=${store_id}" >> $GITHUB_OUTPUT
+      - name: remote external reference should fail by default
+        id: without_flag
+        uses: ./
+        continue-on-error: true
+        with:
+          test_path: ./example/allow_external_files/tests
+          test_files_pattern: '*.test.yaml'
+          fga_server_url: 'http://localhost:8080'
+          fga_server_store_id: ${{ steps.store.outputs.store_id }}
+      - name: assert failure without flag
+        run: |
+          if [ "${{ steps.without_flag.outcome }}" == "success" ]; then
+            echo "Expected the action to fail without fga_cli_allow_external_files"
+            exit 1
+          fi
+      - name: remote external reference should pass with flag
+        uses: ./
+        with:
+          test_path: ./example/allow_external_files/tests
+          test_files_pattern: '*.test.yaml'
+          fga_cli_allow_external_files: 'true'
+          fga_server_url: 'http://localhost:8080'
+          fga_server_store_id: ${{ steps.store.outputs.store_id }}
+
   test_conditions_support:
     name: Test conditions support
     runs-on: ubuntu-latest
@@ -65,7 +168,7 @@ jobs:
 
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Install OpenFGA server ${{ matrix.test.openfga_tag }}
-        uses: step-security/action-install-gh-release@671c3094a3d5dcd2870460d0507b99841597d12b # v2.1.0
+        uses: step-security/action-install-gh-release@fcc32674e8d9158ed77bb8ec6d54b7d49ed259b9 # v3.0.0
         with:
           repo: openfga/openfga
           tag: ${{ matrix.test.openfga_tag }}
@@ -77,7 +180,7 @@ jobs:
         shell: bash
         run: openfga run &
       - name: Install OpenFGA cli
-        uses: step-security/action-install-gh-release@671c3094a3d5dcd2870460d0507b99841597d12b # v2.1.0
+        uses: step-security/action-install-gh-release@fcc32674e8d9158ed77bb8ec6d54b7d49ed259b9 # v3.0.0
         with:
           repo: openfga/cli
           cache: enable
