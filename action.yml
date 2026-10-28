@@ -120,7 +120,7 @@ runs:
         tag: ${{ steps.resolve-cli.outputs.version }}
         digest: ${{ steps.resolve-cli.outputs.digest }}
         cache: enable
-    - uses: step-security/setup-yq@6509aa1108c1ce6e4239aedc9b762ad7b3f1e411 # v1.0.2
+    - uses: step-security/setup-yq@3062aa6a114f7955826c056db55cc0774cac72e8 # v1.0.3
       with:
         yq-version: v4.25.3
     - name: Run OpenFGA CLI
